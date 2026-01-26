@@ -1,0 +1,176 @@
+{% extends 'tickets/base.html' %}
+
+{% block content %}
+
+<div class="row mb-4 align-items-center">
+    <div class="col-md-6">
+        <h2>Dashboard de Tickets</h2>
+        <p class="text-muted">Gestionando incidentes y requerimientos.</p>
+    </div>
+    <div class="col-md-6 text-end">
+        <span class="badge bg-warning text-dark p-2 border border-warning">
+            <h6 class="m-0">Global Pendientes: {{ total_pendientes }}</h6>
+        </span>
+        {% if user.is_authenticated %}
+        <span class="badge bg-primary p-2 ms-2">
+            <h6 class="m-0">Mis Asignados: {{ mis_pendientes }}</h6>
+        </span>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card p-3 mb-4 bg-light border-0 shadow-sm">
+    <form method="GET" class="row g-3 align-items-center">
+
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                <input type="text" name="buscar" class="form-control" placeholder="Buscar por título o descripción..."
+                    value="{{ request.GET.buscar }}">
+            </div>
+        </div>
+
+        <div class="col-md-6 d-flex justify-content-end gap-2">
+
+            {% if user.is_authenticated %}
+
+            {% if request.GET.mis_tickets %}
+            <a href="{% url 'lista_tickets' %}" class="btn btn-outline-secondary">
+                Ver Todos
+            </a>
+            {% else %}
+            <button type="submit" name="mis_tickets" value="true" class="btn btn-outline-primary">
+                <i class="bi bi-person-check"></i> Solo Mis Tickets
+            </button>
+            {% endif %}
+
+            {% endif %}
+            <button type="submit" class="btn btn-dark">Filtrar</button>
+
+            {% if request.GET.buscar or request.GET.mis_tickets %}
+            <a href="{% url 'lista_tickets' %}" class="btn btn-link text-decoration-none">Limpiar</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th class="d-none d-md-table-cell">ID</th>
+                <th>Título</th>
+                <th class="d-none d-md-table-cell">Descripción</th>
+                <th>Estado</th>
+                <th class="d-none d-lg-table-cell">Asignado a</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ticket in tickets %}
+            <tr class="align-middle 
+                {% if ticket.estado == 'PENDIENTE' %} table-warning
+                {% elif ticket.estado == 'EN_PROCESO' %} table-info
+                {% elif ticket.estado == 'FINALIZADO' %} table-success
+                {% endif %}">
+                <td class="d-none d-md-table-cell">{{ ticket.id }}</td>
+                <td>{{ ticket.titulo }}</td>
+                <td class="text-truncate d-none d-md-table-cell" style="max-width: 200px;"
+                    title="{{ ticket.descripcion }}">
+                    {{ ticket.descripcion }}
+                </td>
+                <td>
+                    {% if ticket.estado == 'PENDIENTE' %}
+                    <span class="badge bg-warning text-dark">Pendiente</span>
+                    {% elif ticket.estado == 'EN_PROCESO' %}
+                    <span class="badge bg-primary">En Proceso</span>
+                    {% else %}
+                    <span class="badge bg-success">Finalizado</span>
+                    {% endif %}
+                </td>
+                <td class="d-none d-lg-table-cell">
+                    {% if ticket.asignado_a %}
+                    {{ ticket.asignado_a.username }}
+                    {% else %}
+                    <span class="text-muted">Sin asignar</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="d-flex flex-column gap-2 align-items-start">
+
+                        {% if not ticket.asignado_a %}
+                        <div class="btn-group btn-group-sm d-flex gap-4">
+                            <a href="{% url 'detalle_ticket' ticket.id %}" class="btn btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{% url 'tomar_ticket' ticket.id %}" class="btn btn-success">
+                                Tomar
+                            </a>
+                        </div>
+
+                        {% elif ticket.asignado_a == request.user %}
+
+                        {% if ticket.estado == 'FINALIZADO' %}
+                        <span class="badge bg-secondary w-100">Finalizado</span>
+                        <a href="{% url 'detalle_ticket' ticket.id %}"
+                            class="btn btn-sm btn-outline-secondary w-100 mt-1">
+                            Ver historial
+                        </a>
+                        {% else %}
+                        <span class="badge bg-info text-dark w-100 mb-1">En Progreso</span>
+                        <a href="{% url 'detalle_ticket' ticket.id %}" class="btn btn-sm btn-primary w-100">
+                            Continuar <i class="bi bi-arrow-right-short"></i>
+                        </a>
+                        {% endif %}
+
+                        {% else %}
+                        {% if ticket.estado == 'FINALIZADO' %}
+                        <span class="text-success small fw-bold"><i class="bi bi-check"></i> Resuelto</span>
+                        {% else %}
+                        <span class="text-muted small mb-1">En uso por {{ ticket.asignado_a.username }}</span>
+                        <button class="btn btn-sm btn-light border w-100 disabled text-muted">
+                            <i class="bi bi-lock"></i> Privado
+                        </button>
+                        {% endif %}
+
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">No hay tickets registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <nav aria-label="Navegación de tickets">
+        <ul class="pagination justify-content-center">
+            
+            {% if tickets.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET.buscar %}&buscar={{ request.GET.buscar }}{% endif %}{% if request.GET.mis_tickets %}&mis_tickets=true{% endif %}">&laquo; Primero</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ tickets.previous_page_number }}{% if request.GET.buscar %}&buscar={{ request.GET.buscar }}{% endif %}{% if request.GET.mis_tickets %}&mis_tickets=true{% endif %}">Anterior</a>
+                </li>
+            {% endif %}
+
+            <li class="page-item disabled">
+                <span class="page-link">
+                     {{ tickets.number }} de {{ tickets.paginator.num_pages }}
+                </span>
+            </li>
+
+            {% if tickets.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ tickets.next_page_number }}{% if request.GET.buscar %}&buscar={{ request.GET.buscar }}{% endif %}{% if request.GET.mis_tickets %}&mis_tickets=true{% endif %}">Siguiente</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ tickets.paginator.num_pages }}{% if request.GET.buscar %}&buscar={{ request.GET.buscar }}{% endif %}{% if request.GET.mis_tickets %}&mis_tickets=true{% endif %}">Último &raquo;</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endblock %}

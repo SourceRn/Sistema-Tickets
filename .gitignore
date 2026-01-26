@@ -1,0 +1,35 @@
+# --- Python ---
+# Archivos compilados (byte-code)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Entornos Virtuales ---
+# Carpeta de tu entorno virtual
+venv/
+env/
+.env
+
+# --- Django ---
+# Base de datos local
+db.sqlite3
+db.sqlite3-journal
+
+# Archivos de logs
+*.log
+
+# Archivos estáticos recolectados (solo para producción)
+staticfiles/
+
+# --- Media (Archivos subidos por usuarios) ---
+media/
+
+# --- IDEs y Editores de Texto ---
+# Configuraciones locales
+.vscode/
+.idea/
+
+# --- Sistema Operativo ---
+# Archivos basura de Mac y Windows
+.DS_Store
+Thumbs.db

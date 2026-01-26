@@ -1,0 +1,102 @@
+{% extends 'tickets/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Ticket #{{ ticket.id }}</h4>
+            <span class="badge 
+                {% if ticket.estado == 'PENDIENTE' %}bg-warning text-dark
+                {% elif ticket.estado == 'EN_PROCESO' %}bg-primary
+                {% else %}bg-success{% endif %}">
+                {{ ticket.get_estado_display }}
+            </span>
+        </div>
+        <div class="card-body">
+            <h3 class="card-title text-primary">{{ ticket.titulo }}</h3>
+            <h6 class="text-muted mb-3">
+                Reportado el: {{ ticket.fecha_creacion|date:"d M Y, H:i" }}
+            </h6>
+
+            <hr>
+
+            <h5>Descripción del Problema:</h5>
+            <p class="card-text p-3 bg-light border rounded">
+                {{ ticket.descripcion }}
+            </p>
+
+            <hr>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Asignado a:</strong>
+                    {% if ticket.asignado_a %}
+                    <span class="text-primary fw-bold">{{ ticket.asignado_a.username }}</span>
+                    {% else %}
+                    <span class="text-muted fst-italic">Sin asignar</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <hr>
+
+            <h5 class="text-secondary">Información Adicional</h5>
+
+            {% if ticket.datos_extra %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col" style="width: 30%;">Dato</th>
+                            <th scope="col">Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for clave, valor in ticket.datos_extra.items %}
+                        <tr>
+                            <td class="fw-bold text-muted">{{ clave|title }}</td>
+                            <td>{{ valor }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-light border text-center text-muted">
+                No hay información extra en este ticket.
+            </div>
+            {% endif %}
+        </div>
+        <div class="card-footer bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+
+                <a href="{% url 'lista_tickets' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver al Dashboard
+                </a>
+
+                <div class="d-flex gap-2">
+
+                    {% if ticket.asignado_a == request.user and ticket.estado != 'FINALIZADO' %}
+
+                    <a href="{% url 'cancelar_ticket' ticket.id %}" class="btn btn-warning text-dark"
+                        onclick="return confirm('¿Liberar este ticket para que otro lo tome?')">
+                        <i class="bi bi-arrow-counterclockwise"></i> Soltar Ticket
+                    </a>
+
+                    <a href="{% url 'finalizar_ticket' ticket.id %}" class="btn btn-danger"
+                        onclick="return confirm('¿Confirmas que el trabajo está terminado?')">
+                        <i class="bi bi-check-lg"></i> Finalizar Tarea
+                    </a>
+
+                    {% elif not ticket.asignado_a %}
+                    <a href="{% url 'tomar_ticket' ticket.id %}" class="btn btn-success btn-lg">
+                        Tomar este Ticket
+                    </a>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

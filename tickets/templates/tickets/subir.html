@@ -1,0 +1,21 @@
+{% extends 'tickets/base.html' %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <h4>Importar Tickets desde Excel</h4>
+    </div>
+    <div class="card-body">
+        <p>Sube un archivo .xlsx con las columnas <strong>Titulo</strong> y <strong>Detalle</strong>.</p>
+        
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %} <div class="mb-3">
+                <label for="archivo" class="form-label">Seleccionar archivo</label>
+                <input type="file" name="archivo_excel" class="form-control" id="archivo" required accept=".xlsx">
+            </div>
+
+            <button type="submit" class="btn btn-success">Cargar Tickets</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

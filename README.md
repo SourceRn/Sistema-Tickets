@@ -75,7 +75,7 @@ El proyecto utiliza **SQLite 3**, que viene integrado por defecto en Django.
 
 1. **Clonar el repositorio:**
    ```bash
-   git clone <tu-url-del-repo>
+   git clone https://github.com/SourceRn/Sistema-Tickets
 
 2. **Crear Entorno Virtual:**
    ```bash

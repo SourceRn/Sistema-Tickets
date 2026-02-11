@@ -1,99 +1,57 @@
-# 🎫 Sistema de Gestión de Tickets (Django)
+# Sistema de Gestión de Tickets (Service Desk MVP)
 
-Un sistema de gestión de incidentes robusto y minimalista diseñado para equipos de soporte. Permite la importación masiva de tickets desde Excel, asignación inteligente de tareas y un flujo de trabajo claro para agentes de servicio.
+Sistema de seguimiento de incidentes y requerimientos desarrollado en Django. Este proyecto implementa una arquitectura modular y escalable, separando la lógica de negocio, la capa de acceso a datos y la interfaz de usuario, siguiendo principios de **Clean Architecture** y **Domain-Driven Design (DDD)** adaptado a Django.
 
-## 🚀 Características Principales
+## Características Principales
 
-* **Importación Masiva:** Carga cientos de tickets arrastrando un archivo Excel. El sistema limpia y normaliza los datos automáticamente.
-* **Gestión de Estados:** Flujo lógico de tickets: *Pendiente* ➝ *En Proceso* ➝ *Finalizado*.
-* **Prevención de Colisiones:** Bloqueo de tickets. Si el Agente A está trabajando en un ticket, el Agente B no puede intervenir, evitando duplicidad de esfuerzos.
-* **Seguridad por Roles:** Diferenciación estricta entre Superusuarios (Administradores) y Agentes.
-* **Interfaz Responsiva:** Diseño adaptado para móviles y escritorio utilizando Bootstrap 5.
-* **Protección de Rutas:** Middleware personalizado y validaciones para proteger el panel de administración y las rutas de carga.
+* **Gestión de Tickets:** Creación, asignación, seguimiento y cierre de incidentes.
+* **Carga Masiva (Excel):** Importación de tickets desde archivos Excel con validación de datos y detección de duplicados.
+* **Reportes:** Exportación inteligente de datos a Excel, incluyendo campos dinámicos (JSON).
+* **Comentarios Anidados:** Hilo de conversación con soporte para adjuntar imágenes.
+* **Búsqueda Avanzada:** Filtrado por texto, estado y asignación (Lógica acumulativa).
+* **Seguridad:** Roles diferenciados (Superusuario, Staff, Usuario final) y protección CSRF.
 
----
+## Arquitectura del Proyecto
 
-## 📂 Arquitectura del Proyecto
+El proyecto se aleja de la estructura monolítica por defecto de Django para adoptar una organización por capas:
 
-A continuación se describe la función de los archivos clave mostrados en la estructura del proyecto:
+### 1. Separación Frontend / Backend
+* **`apps/`**: Contiene exclusivamente código Python (Lógica de Backend).
+* **`resources/`**: Contiene HTML, CSS, JS e imágenes estáticas (Capa de Presentación).
 
-### 📁 Raíz
-* **`manage.py`**: El script maestro de Django para ejecutar el servidor, crear migraciones y gestionar usuarios.
-* **`db.sqlite3`**: Base de datos ligera y portable (ver sección Base de Datos).
+### 2. Patrones de Diseño Implementados
+Dentro de la aplicación `tickets`, se utilizan patrones específicos para mantener las vistas limpias ("Skinny Views"):
 
-### 📁 config (Configuración Global)
-* **`settings.py`**: Configuración del núcleo (Base de datos, Apps instaladas, Seguridad, Archivos Estáticos).
-* **`urls.py`**: El "mapa" de entrada. Aquí se define la ruta segura para el admin y se incluyen las rutas de la app de tickets.
+* **Services (`services.py`):** Manejan la lógica de negocio compleja y transacciones (ej. Procesamiento de Excel).
+* **Selectors (`selectors.py`):** Encapsulan consultas complejas a la base de datos (QuerySets) para ser reutilizadas.
+* **Modular Views (`views/`):** Las vistas están divididas por dominio (`tickets.py`, `export_import.py`, `comments.py`) en lugar de un archivo gigante.
+* **Constantes Centralizadas (`constants.py`):** Uso de `TextChoices` para evitar "Strings Mágicos".
 
-### 📁 tickets (La Aplicación Principal)
-* **`models.py`**: Define la estructura de datos. Aquí vive la clase `Ticket` (título, descripción, fechas) y el campo flexible JSON para datos extra del Excel.
-* **`views.py`**: El cerebro del sistema. Contiene la lógica para:
-    * Leer y limpiar el Excel con Pandas.
-    * Filtrar y buscar tickets.
-    * Controlar la lógica de "Tomar", "Soltar" y "Finalizar" tareas.
-* **`urls.py`**: Define las rutas internas (ej: `/subir`, `/tomar/<id>`).
-* **`middleware.py`**: Capa de seguridad extra que intercepta las peticiones para proteger rutas sensibles o el panel de admin.
-* **`templates/tickets/`**:
-    * `lista.html`: Dashboard principal con filtros y paginación.
-    * `detalle.html`: Vista profunda del ticket con acciones de gestión.
-    * `subir.html`: Formulario de carga de Excel.
+## Estructura de Carpetas
 
----
-
-## 👥 Roles y Permisos
-
-El sistema maneja dos niveles de autoridad:
-
-### 1. Superusuario (Administrador)
-* **Capacidad exclusiva:** Puede ver y acceder a la opción "Importar Excel" en el menú de navegación.
-* **Acceso Total:** Tiene acceso al panel de administración de Django (ruta segura).
-* **Visibilidad:** Puede ver el dashboard completo.
-
-### 2. Agente (Usuario Staff/Normal)
-* **Gestión de Tickets:** Puede buscar, filtrar y "Tomar" tickets disponibles.
-* **Restricciones:**
-    * No ve la opción de importar Excel.
-    * No tiene acceso al panel de administración (recibe un error 404 si intenta entrar).
-    * No puede ver los detalles de un ticket que ya está asignado a otro compañero (Privacidad entre agentes).
-* **Acciones:** Puede "Finalizar" sus tickets o "Soltar" un ticket si no puede resolverlo, devolviéndolo a la lista general.
-
----
-
-## 💾 Base de Datos (SQLite)
-
-El proyecto utiliza **SQLite 3**, que viene integrado por defecto en Django.
-
-* **¿Cómo funciona?**: Toda la información (Usuarios, Tickets, Sesiones) se guarda en el archivo `db.sqlite3`.
-* **Ventajas**:
-    * **Portabilidad**: No requiere instalar servidores SQL externos (como MySQL o PostgreSQL).
-    * **Backup**: Hacer una copia de seguridad es tan simple como copiar el archivo `db.sqlite3`.
-    * **Despliegue**: Ideal para entornos de desarrollo y pequeñas implementaciones internas.
-
----
-
-## 🛠️ Instalación y Uso
-
-1. **Clonar el repositorio:**
-   ```bash
-   git clone https://github.com/SourceRn/Sistema-Tickets
-
-2. **Crear Entorno Virtual:**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate # En Windows: venv\Scripts\activate
-
-3. **Instalar dependencias:**
-   ```bash
-   pip install -r requirements.txt
-
-4. **Aplicar migraciones (crear la BD):**
-   ```bash
-   python manage.py migrate
-
-5. **Crear Superusuario:**
-   ```bash
-   python manage.py createsuperuser  
-
-6. **Ejecutar el servidor:**
-   ```bash
-   python manage.py runserver
+```text
+PROYECTO_RAIZ/
+├── config/                 # Configuraciones globales (settings, urls, wsgi)
+├── apps/                   # Lógica de Negocio (Backend)
+│   └── tickets/
+│       ├── migrations/
+│       ├── tests/          # Pruebas unitarias organizadas
+│       ├── views/          # Controladores modulares
+│       │   ├── tickets.py
+│       │   ├── export_import.py
+│       │   └── comments.py
+│       ├── models.py       # Definición de datos
+│       ├── services.py     # Lógica de escritura/negocio
+│       ├── selectors.py    # Lógica de lectura
+│       ├── forms.py        # Validación de entrada
+│       └── constants.py    # Enumeraciones
+│
+├── resources/              # Capa de Presentación (Frontend)
+│   ├── static/             # CSS, JS, Imágenes del sistema
+│   └── templates/
+│       ├── registration/   # Login/Logout
+│       └── tickets/        # Plantillas de la app
+│
+├── media/                  # Archivos subidos por usuarios
+├── manage.py
+└── requirements.txt

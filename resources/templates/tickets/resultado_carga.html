@@ -1,0 +1,69 @@
+{% extends 'tickets/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0"><i class="bi bi-file-earmark-check"></i> Reporte de Importación</h4>
+        </div>
+        <div class="card-body">
+            
+            <div class="row text-center mb-4">
+                <div class="col-md-6">
+                    <h2 class="text-success fw-bold">{{ creados }}</h2>
+                    <p class="text-muted">Tickets Nuevos</p>
+                </div>
+                <div class="col-md-6">
+                    <h2 class="text-warning fw-bold">{{ actualizados }}</h2>
+                    <p class="text-muted">Tickets Actualizados</p>
+                </div>
+            </div>
+
+            <hr>
+
+            {% if detalles %}
+                <h5 class="mt-3 text-warning"><i class="bi bi-exclamation-triangle"></i> Detalle de Modificaciones</h5>
+                <p class="small text-muted">Se detectaron cambios en los siguientes tickets y fueron actualizados automáticamente:</p>
+                
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Título / Referencia</th>
+                                <th>¿Qué cambió?</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in detalles %}
+                            <tr>
+                                <td>{{ item.id }}</td>
+                                <td>{{ item.titulo }}</td>
+                                <td class="text-danger small">{{ item.motivos }}</td>
+                                <td>
+                                    <a href="{% url 'detalle_ticket' item.id %}" target="_blank" class="btn btn-xs btn-outline-primary">
+                                        Ver <i class="bi bi-box-arrow-up-right"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                {% if actualizados == 0 %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> No se modificaron tickets existentes. Toda la información coincidía.
+                    </div>
+                {% endif %}
+            {% endif %}
+
+            <div class="d-grid gap-2 mt-4">
+                <a href="{% url 'lista_tickets' %}" class="btn btn-dark btn-lg">Ir al Dashboard</a>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

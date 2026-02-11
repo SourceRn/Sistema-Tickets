@@ -1,0 +1,54 @@
+<div class="d-flex mb-3" id="comentario-{{ comentario.id }}">
+    <div class="flex-shrink-0">
+        <div class="rounded-circle bg-secondary text-white d-flex justify-content-center align-items-center" style="width: 32px; height: 32px; font-size: 0.8rem;">
+            {{ comentario.autor.username|slice:":1"|upper }}
+        </div>
+    </div>
+
+    <div class="flex-grow-1 ms-3">
+        <div class="bg-light p-3 rounded">
+            <div class="d-flex justify-content-between">
+                <span class="fw-bold small">{{ comentario.autor.username }}</span>
+                <span class="text-muted small">{{ comentario.fecha|date:"d/m H:i" }}</span>
+            </div>
+            
+            <p class="mb-1 text-break">{{ comentario.texto|linebreaksbr }}</p>
+            
+            {% if comentario.imagen %}
+                <div class="mt-2">
+                    <a href="{{ comentario.imagen.url }}" target="_blank">
+                        <img src="{{ comentario.imagen.url }}" class="img-thumbnail" style="max-height: 100px;">
+                    </a>
+                </div>
+            {% endif %}
+
+            {% if ticket.estado != 'FINALIZADO' %}
+            <div class="mt-2">
+                <button class="btn btn-link btn-sm p-0 text-decoration-none small" 
+                        onclick="toggleResponder('{{ comentario.id }}')">
+                    <i class="bi bi-reply"></i> Responder
+                </button>
+            </div>
+
+            <div id="form-responder-{{ comentario.id }}" class="d-none mt-2">
+                <form action="{% url 'agregar_comentario' ticket.id %}" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="parent_id" value="{{ comentario.id }}">
+                    
+                    <textarea name="texto_comentario" class="form-control form-control-sm mb-1" rows="2" placeholder="Respuesta para {{ comentario.autor.username }}..."></textarea>
+                    <input type="file" name="imagen_comentario" class="form-control form-control-sm mb-1">
+                    <button type="submit" class="btn btn-primary btn-sm btn-xs">Enviar Respuesta</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if comentario.respuestas.all %}
+            <div class="mt-3 ps-3 border-start border-2">
+                {% for respuesta in comentario.respuestas.all %}
+                    {% include "tickets/comentario_nodo.html" with comentario=respuesta %}
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>

@@ -1,0 +1,85 @@
+{% extends 'tickets/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="bi bi-plus-circle"></i> Nuevo Ticket Manual</h4>
+        </div>
+        <div class="card-body">
+            
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Título / ID Referencia</label>
+                    {{ form.titulo }}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Descripción</label>
+                    {{ form.descripcion }}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Asignar a</label>
+                    {{ form.asignado_a }}
+                </div>
+
+                <hr>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-success">
+                        <i class="bi bi-boxes"></i> Datos Adicionales (Columnas Extra)
+                    </label>
+                    <p class="small text-muted">Agrega campos personalizados para este ticket (Ej: Marca, IP, Ubicación).</p>
+                    
+                    <div id="contenedor-campos">
+                        </div>
+
+                    <button type="button" class="btn btn-sm btn-outline-success mt-2" onclick="agregarCampo()">
+                        <i class="bi bi-plus-lg"></i> Agregar Campo Nuevo
+                    </button>
+                </div>
+
+                <hr>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'lista_tickets' %}" class="btn btn-outline-secondary">Cancelar</a>
+                    <button type="button" class="btn btn-success" onclick="this.form.submit()">
+                        <i class="bi bi-save"></i> Guardar Ticket
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function agregarCampo() {
+        const contenedor = document.getElementById('contenedor-campos');
+        
+        const fila = document.createElement('div');
+        fila.className = 'input-group mb-2';
+        
+        fila.innerHTML = `
+            <span class="input-group-text">Nombre:</span>
+            <input type="text" name="extra_keys[]" class="form-control" placeholder="Ej: Color" required>
+            
+            <span class="input-group-text">Valor:</span>
+            <input type="text" name="extra_values[]" class="form-control" placeholder="Ej: Rojo" required>
+            
+            <button type="button" class="btn btn-outline-danger" onclick="eliminarFila(this)">
+                <i class="bi bi-trash"></i>
+            </button>
+        `;
+        
+        contenedor.appendChild(fila);
+    }
+
+    function eliminarFila(boton) {
+        // Elimina el div padre del botón (la fila completa)
+        boton.parentElement.remove();
+    }
+</script>
+{% endblock %}

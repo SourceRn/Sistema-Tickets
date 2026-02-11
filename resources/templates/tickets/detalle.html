@@ -1,0 +1,186 @@
+{% extends 'tickets/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Ticket #{{ ticket.id }}</h4>
+            <span class="badge 
+                {% if ticket.estado == 'PENDIENTE' %}bg-warning text-dark
+                {% elif ticket.estado == 'EN_PROCESO' %}bg-primary
+                {% else %}bg-success{% endif %}">
+                {{ ticket.get_estado_display }}
+            </span>
+        </div>
+        <div class="card-body">
+            <h3 class="card-title text-primary">{{ ticket.titulo }}</h3>
+            <h6 class="text-muted mb-3">
+                Reportado el: {{ ticket.fecha_creacion|date:"d M Y, H:i" }}
+            </h6>
+
+            <hr>
+
+            <h5>Descripción del Problema:</h5>
+            <p class="card-text p-3 bg-light border rounded">
+                {{ ticket.descripcion }}
+            </p>
+
+            <hr>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Asignado a:</strong>
+                    {% if ticket.asignado_a %}
+                    <span class="text-primary fw-bold">{{ ticket.asignado_a.username }}</span>
+                    {% else %}
+                    <span class="text-muted fst-italic">Sin asignar</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <hr>
+
+            <h5 class="text-secondary">Información Adicional</h5>
+
+            {% if ticket.datos_extra %}
+            <div class="card mb-4 shadow-sm border-0">
+                <div class="card-header bg-white border-bottom">
+                    <h6 class="mb-0 fw-bold text-primary">
+                        <i class="bi bi-table"></i> Detalles Técnicos (Excel/Manual)
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col" class="ps-3" style="width: 35%;">Dato / Campo</th>
+                                    <th scope="col">Valor Registrado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for clave, valor in ticket.datos_extra.items %}
+                                <tr>
+                                    <td class="ps-3 fw-bold text-secondary small align-middle">
+                                        {{ clave|upper }}
+                                    </td>
+                                    <td class="align-middle text-break">
+                                        {{ valor|default:"-" }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-light border text-center text-muted small">
+                <i class="bi bi-info-circle"></i> Sin datos adicionales.
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-chat-left-text"></i> Bitácora / Comentarios</h5>
+            </div>
+            <div class="card-body">
+
+                <div class="mb-4">
+                    {% for comentario in comentarios %}
+
+                    {% include "tickets/comentario_nodo.html" %}
+
+                    {% empty %}
+                    <p class="text-muted text-center fst-italic">No hay comentarios aún. Inicia la conversación.</p>
+                    {% endfor %}
+                </div>
+
+                {% if ticket.estado != 'FINALIZADO' %}
+
+                <hr class="my-4">
+
+                <h6 class="fw-bold text-secondary mb-3">
+                    <i class="bi bi-plus-circle-dotted"></i> Iniciar nuevo tema:
+                </h6>
+
+                <form action="{% url 'agregar_comentario' ticket.id %}" method="POST" enctype="multipart/form-data"
+                    class="bg-light p-3 rounded border">
+                    {% csrf_token %}
+
+                    <div class="mb-2">
+                        <label class="form-label fw-bold small text-muted">
+                            <i class="bi bi-person-circle"></i> {{ request.user.username }} dice:
+                        </label>
+                        <textarea name="texto_comentario" class="form-control" rows="2"
+                            placeholder="Escribe un comentario general..."></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Adjuntar evidencia (Opcional)</label>
+                        <input type="file" name="imagen_comentario" class="form-control form-control-sm"
+                            accept="image/*">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="bi bi-send"></i> Enviar Comentario
+                    </button>
+                </form>
+
+                {% else %}
+                <div class="alert alert-secondary text-center mt-4">
+                    <i class="bi bi-lock-fill"></i> Este ticket está cerrado y no admite más comentarios.
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+
+        <div class="card-footer bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+
+                <a href="{% url 'lista_tickets' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver al Dashboard
+                </a>
+
+                <div class="d-flex gap-2">
+
+                    {% if ticket.asignado_a == request.user and ticket.estado != 'FINALIZADO' %}
+
+                    <a href="{% url 'cancelar_ticket' ticket.id %}" class="btn btn-warning text-dark"
+                        onclick="return confirm('¿Liberar este ticket para que otro lo tome?')">
+                        <i class="bi bi-arrow-counterclockwise"></i> Soltar Ticket
+                    </a>
+
+                    <a href="{% url 'finalizar_ticket' ticket.id %}" class="btn btn-danger"
+                        onclick="return confirm('¿Confirmas que el trabajo está terminado?')">
+                        <i class="bi bi-check-lg"></i> Finalizar Tarea
+                    </a>
+
+                    {% elif not ticket.asignado_a %}
+                    <a href="{% url 'tomar_ticket' ticket.id %}" class="btn btn-success btn-lg">
+                        Tomar este Ticket
+                    </a>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleResponder(id) {
+        const form = document.getElementById('form-responder-' + id);
+        if (form) {
+            if (form.classList.contains('d-none')) {
+                form.classList.remove('d-none');
+                form.querySelector('textarea').focus();
+            } else {
+                form.classList.add('d-none');
+            }
+        }
+    }
+</script>
+{% endblock %}

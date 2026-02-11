@@ -27,13 +27,20 @@
 
                     <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'lista_tickets' %}active fw-bold{% endif %}"
-                            href="{% url 'lista_tickets' %}">Dashboard</a>
+                            href="{% url 'lista_tickets' %}">
+                            <i class="bi bi-speedometer2"></i> Dashboard</a>
                     </li>
 
                     {% if user.is_superuser %}
                     <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'subir_tickets' %}active fw-bold{% endif %}"
-                            href="{% url 'subir_tickets' %}">Importar Excel</a>
+                            href="{% url 'subir_tickets' %}">
+                            <i class="bi bi-file-earmark-excel text-success"></i> Importar Excel</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'crear_ticket' %}active fw-bold{% endif %}" href="{% url 'crear_ticket' %}">
+                            <i class="bi bi-pencil-square"></i> Crear Ticket Manual
+                        </a>
                     </li>
                     {% endif %}
                 </ul>

@@ -21,6 +21,7 @@ class Ticket(models.Model):
         return f"{self.titulo} ({self.estado})"
     
 class Comentario(models.Model):
+
     ticket = models.ForeignKey(Ticket, related_name='comentarios', on_delete=models.CASCADE)
     autor = models.ForeignKey(User, on_delete=models.CASCADE)
     texto = models.TextField()
@@ -32,3 +33,12 @@ class Comentario(models.Model):
 
     class Meta:
         ordering = ["fecha"]
+
+class TicketAdjunto(models.Model):
+    ticket = models.ForeignKey(Ticket, related_name='adjuntos', on_delete=models.CASCADE)
+    archivo = models.ImageField(upload_to='tickets/evidencia/%Y/%m/')
+    nombre = models.CharField(max_length=255, blank=True)
+    fecha_subida = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Adjunto para {self.ticket.id_referencia}"

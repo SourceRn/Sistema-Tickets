@@ -2,52 +2,108 @@
 
 {% block content %}
 <div class="container mt-4">
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0"><i class="bi bi-plus-circle"></i> Nuevo Ticket Manual</h4>
+    <div class="card shadow">
+        <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="bi bi-shield-exclamation"></i> Reporte de Incidente de Seguridad</h4>
+            <span class="badge bg-light text-danger">Nuevo Ticket</span>
         </div>
         <div class="card-body">
             
-            <form method="POST">
+            <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Título / ID Referencia</label>
-                    {{ form.titulo }}
+                <h5 class="text-secondary border-bottom pb-2">1. Información General</h5>
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold">Título del Incidente</label>
+                        {{ form.titulo }} 
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Asignar a</label>
+                        {{ form.asignado_a }}
+                    </div>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Descripción</label>
+                    <label class="form-label fw-bold">Detalle / Descripción</label>
                     {{ form.descripcion }}
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Asignar a</label>
-                    {{ form.asignado_a }}
+                <h5 class="text-secondary border-bottom pb-2 mt-4">2. Detalles Técnicos (Origen y Destino)</h5>
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Fecha/Hora del Incidente</label>
+                        <input type="datetime-local" name="fecha_incidente" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">IP Origen (Atacante)</label>
+                        <input type="text" name="ip_origen" class="form-control" placeholder="Ej: 192.168.1.50">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Dominio/Host Origen</label>
+                        <input type="text" name="host_origen" class="form-control" placeholder="Ej: pc-infectada-01">
+                    </div>
                 </div>
 
-                <hr>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">IP/Host Destino (Target)</label>
+                        <input type="text" name="ip_destino" class="form-control" placeholder="Ej: Servidor-Finanzas">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Puerto Afectado</label>
+                        <input type="number" name="puerto" class="form-control" placeholder="Ej: 443, 22, 3389">
+                    </div>
+                </div>
 
+                <h5 class="text-secondary border-bottom pb-2 mt-4">3. Acciones Tomadas</h5>
                 <div class="mb-3">
-                    <label class="form-label fw-bold text-success">
-                        <i class="bi bi-boxes"></i> Datos Adicionales (Columnas Extra)
-                    </label>
-                    <p class="small text-muted">Agrega campos personalizados para este ticket (Ej: Marca, IP, Ubicación).</p>
-                    
-                    <div id="contenedor-campos">
+                    <label class="form-label fw-bold">Acción Realizada</label>
+                    <textarea name="accion_realizada" class="form-control" rows="2" placeholder="Describe qué medidas inmediatas se tomaron..."></textarea>
+                </div>
+
+                <h5 class="text-secondary border-bottom pb-2 mt-4">4. Evidencia y Adjuntos</h5>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Capturas de Pantalla / Imágenes</label>
+                    <p class="small text-muted mb-1">Formatos permitidos: JPG, PNG, WEBP. Usa Ctrl/Cmd para seleccionar varios.</p>
+                    <input type="file" name="evidencia_imagenes" class="form-control" multiple accept="image/*">
+                </div>
+
+                <h5 class="text-success border-bottom border-success pb-2 mt-4">
+                    <i class="bi bi-database-add"></i> 5. Datos Personalizados
+                </h5>
+
+                <div class="accordion mb-4" id="accordionExtras">
+                    <div class="accordion-item border border-success">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed text-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" style="background-color: #f8fff9;">
+                                <i class="bi bi-plus-circle-fill me-2"></i> Desplegar panel de variables extra
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse">
+                            <div class="accordion-body bg-white">
+                                
+                                <div class="alert alert-success py-2 small mb-3">
+                                    <i class="bi bi-info-circle"></i> Agrega campos dinámicos que no estén en el formulario estándar.
+                                </div>
+
+                                <div id="contenedor-campos"></div>
+                                
+                                <button type="button" class="btn btn-sm btn-success mt-2 shadow-sm" onclick="agregarCampo()">
+                                    <i class="bi bi-plus-lg"></i> Agregar Clave/Valor Manual
+                                </button>
+                            </div>
                         </div>
-
-                    <button type="button" class="btn btn-sm btn-outline-success mt-2" onclick="agregarCampo()">
-                        <i class="bi bi-plus-lg"></i> Agregar Campo Nuevo
-                    </button>
+                    </div>
                 </div>
 
-                <hr>
+                <hr class="my-4">
 
-                <div class="d-flex justify-content-between mt-4">
-                    <a href="{% url 'lista_tickets' %}" class="btn btn-outline-secondary">Cancelar</a>
-                    <button type="button" class="btn btn-success" onclick="this.form.submit()">
-                        <i class="bi bi-save"></i> Guardar Ticket
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'lista_tickets' %}" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-save"></i> Registrar Incidente
                     </button>
                 </div>
             </form>
@@ -58,28 +114,18 @@
 <script>
     function agregarCampo() {
         const contenedor = document.getElementById('contenedor-campos');
-        
         const fila = document.createElement('div');
         fila.className = 'input-group mb-2';
-        
         fila.innerHTML = `
-            <span class="input-group-text">Nombre:</span>
-            <input type="text" name="extra_keys[]" class="form-control" placeholder="Ej: Color" required>
-            
-            <span class="input-group-text">Valor:</span>
-            <input type="text" name="extra_values[]" class="form-control" placeholder="Ej: Rojo" required>
-            
-            <button type="button" class="btn btn-outline-danger" onclick="eliminarFila(this)">
+            <span class="input-group-text">Nombre</span>
+            <input type="text" name="extra_keys[]" class="form-control" placeholder="Ej: Sistema Operativo">
+            <span class="input-group-text">Valor</span>
+            <input type="text" name="extra_values[]" class="form-control" placeholder="Ej: Windows Server 2019">
+            <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()">
                 <i class="bi bi-trash"></i>
             </button>
         `;
-        
         contenedor.appendChild(fila);
-    }
-
-    function eliminarFila(boton) {
-        // Elimina el div padre del botón (la fila completa)
-        boton.parentElement.remove();
     }
 </script>
 {% endblock %}

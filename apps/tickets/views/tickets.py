@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from apps.tickets.models import Ticket
+from apps.tickets.models import Ticket, TicketAdjunto
 from apps.tickets.forms import TicketForm
 from apps.tickets import selectors 
 from apps.tickets.constants import EstadoTicket
@@ -43,8 +43,9 @@ def ver_detalle_ticket(request, ticket_id):
 
 @login_required
 def crear_ticket_manual(request):
-    if not request.user.is_superuser:
-        messages.error(request, "Solo administradores pueden crear tickets manualmente.")
+    
+    if not request.user.is_superuser and not request.user.is_staff:
+        messages.error(request, "No tienes permisos para crear tickets.")
         return redirect('lista_tickets')
     
     if request.method == 'POST':
@@ -52,15 +53,25 @@ def crear_ticket_manual(request):
 
         if form.is_valid():
             ticket = form.save(commit=False)
-            
+            ticket.autor = request.user
             ticket.id_referencia = ticket.titulo.upper()
-            
             ticket.estado = EstadoTicket.PENDIENTE
             
+            datos_json = {}
+
+            campos_estaticos = [
+                'ip_origen', 'host_origen', 'ip_destino', 
+                'puerto', 'accion_realizada', 'fecha_incidente'
+            ]
+            
+            for campo in campos_estaticos:
+                valor = request.POST.get(campo)
+                if valor:
+                    key_bonita = campo.replace('_', ' ').title()
+                    datos_json[key_bonita] = valor.strip()
+
             keys = request.POST.getlist('extra_keys[]')
             values = request.POST.getlist('extra_values[]')
-
-            datos_json = {}
 
             for k, v in zip(keys, values):
                 if k.strip() and v.strip():
@@ -69,8 +80,17 @@ def crear_ticket_manual(request):
             ticket.datos_extra = datos_json
             
             ticket.save()
+
+            imagenes = request.FILES.getlist('evidencia_imagenes')
             
-            messages.success(request, f"Ticket '{ticket.titulo}' creado exitosamente.")
+            for img in imagenes:
+                TicketAdjunto.objects.create(
+                    ticket=ticket,
+                    archivo=img,
+                    nombre=img.name
+                )
+            
+            messages.success(request, f"Incidente '{ticket.titulo}' registrado correctamente.")
             return redirect('lista_tickets')
     else:
         form = TicketForm()

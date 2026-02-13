@@ -79,6 +79,23 @@
                 <i class="bi bi-info-circle"></i> Sin datos adicionales.
             </div>
             {% endif %}
+            <h5 class="mt-4">Evidencia Adjunta</h5>
+            <div class="row">
+                {% for adjunto in ticket.adjuntos.all %}
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100">
+                            <a href="{{ adjunto.archivo.url }}" target="_blank">
+                                <img src="{{ adjunto.archivo.url }}" class="card-img-top" alt="Evidencia" style="height: 150px; object-fit: cover;">
+                            </a>
+                            <div class="card-footer text-muted small">
+                                {{ adjunto.fecha_subida|date:"d/m H:i" }}
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-muted fst-italic">No hay imágenes adjuntas.</p>
+                {% endfor %}
+            </div>
         </div>
 
         <div class="card mt-4">

@@ -37,7 +37,14 @@ Ahora se puede acceder en: <pre> ```http://localhost``` </pre>
 **Aplicar cambios en el código:** <pre> ```bash docker-compose up -d --build ``` </pre> (docker detecta cambios y reconstruye solo lo necesario)
 **Recolectar estáticos manualmente:** <pre> ```bash docker-compose exec web python manage.py collectstatic --noinput ``` </pre>
 
+### Explicación Arquitectónica (Infraestructura)
+Se adoptó la **Estrategia de 3 Capas**:
+**1. Nginx.** Actúa como Reverse Proxy y servidor de archivos estáticos/media, liberando Django de tareas de E/S
+**2. Gunicorn.** Servidor WSGI de alto rendimiento que maneja los procesos de python.
+**3. PostgreSQL.** Base de datos relacional aislada en una red privada de Docker, accesible solo por la aplicación.
+
 ## Arquitectura del proyecto
+```text
 PROYECTO_RAIZ/
 ├── config/             # Configuraciones globales (settings, urls, wsgi)
 ├── apps/               # Lógica de Negocio (Backend)
@@ -55,57 +62,3 @@ PROYECTO_RAIZ/
 ├── entrypoint.sh       # Script de automatización de migraciones y arranque
 ├── manage.py           # Utilidad de administración de Django (Entrypoint)
 └── requirements.txt    # Dependencias del proyecto (incluye Gunicorn)
-
-### Explicación Arquitectónica (Infraestructura)
-Se adoptó la **Estrategia de 3 Capas**:
-**1. Nginx.** Actúa como Reverse Proxy y servidor de archivos estáticos/media, liberando Django de tareas de E/S
-**2. Gunicorn.** Servidor WSGI de alto rendimiento que maneja los procesos de python.
-**3. PostgreSQL.** Base de datos relacional aislada en una red privada de Docker, accesible solo por la aplicación.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-* **Services (`services.py`):** Manejan la lógica de negocio compleja y transacciones (ej. Procesamiento de Excel).
-* **Selectors (`selectors.py`):** Encapsulan consultas complejas a la base de datos (QuerySets) para ser reutilizadas.
-* **Modular Views (`views/`):** Las vistas están divididas por dominio (`tickets.py`, `export_import.py`, `comments.py`) en lugar de un archivo gigante.
-* **Constantes Centralizadas (`constants.py`):** Uso de `TextChoices` para evitar "Strings Mágicos".
-
-## Estructura de Carpetas
-
-```text
-PROYECTO_RAIZ/
-├── config/                 # Configuraciones globales (settings, urls, wsgi)
-├── apps/                   # Lógica de Negocio (Backend)
-│   └── tickets/
-│       ├── migrations/
-│       ├── tests/          # Pruebas unitarias organizadas
-│       ├── views/          # Controladores modulares
-│       │   ├── tickets.py
-│       │   ├── export_import.py
-│       │   └── comments.py
-│       ├── models.py       # Definición de datos
-│       ├── services.py     # Lógica de escritura/negocio
-│       ├── selectors.py    # Lógica de lectura
-│       ├── forms.py        # Validación de entrada
-│       └── constants.py    # Enumeraciones
-│
-├── resources/              # Capa de Presentación (Frontend)
-│   ├── static/             # CSS, JS, Imágenes del sistema
-│   └── templates/
-│       ├── registration/   # Login/Logout
-│       └── tickets/        # Plantillas de la app
-│
-├── media/                  # Archivos subidos por usuarios
-├── manage.py
-└── requirements.txt
